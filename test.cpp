@@ -15,14 +15,22 @@ template<class R,class ...args>
     {
         cout<<"j"<<endl;
     }
-
+constexpr int f(int x)
+{
+    int sum=0;
+    while(--x>0)
+        sum+=x/3;
+    return sum;
+}
 int main()
 {
-  optional<void> a;
+  //optional<void> a;
 
 
+cout<<f(13);
 
-
-    show(function<void(int,int)>([](int a,int b){cout<<"haha"<<a<<b<<endl;}),1,2);
+   // show(function<void(int,int)>([](int a,int b){cout<<"haha"<<a<<b<<endl;}),1,2);
 
 }
+
+//muteable class numvber
