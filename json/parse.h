@@ -14,6 +14,8 @@ namespace Yu{
             void load(string &filename);
             void load(const char *filename);
 
+            void jump();
+
             json parsefile();
             json parsestring();
             json parsenumber();
@@ -28,6 +30,7 @@ namespace Yu{
             private:
             string m_str;
             size_t m_idx;
+            int a=0;
 
         };
     }

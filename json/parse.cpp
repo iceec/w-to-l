@@ -5,6 +5,18 @@
 
 namespace Yu::json
 {
+
+    void parse::jump()
+    {
+        skipwhite();
+        if(m_idx!=m_str.size()-1&&m_str[m_idx]!=',')
+        {
+            for(int i=30;i>=0;--i)
+                cout<<m_str[m_idx-i];
+            throw std::logic_error(", wrong");
+        }
+        ++m_idx;
+    }
     void parse::load(string &filename)
     {
         ifstream fin(filename);
@@ -13,6 +25,9 @@ namespace Yu::json
             throw logic_error("no such file");
         ss << fin.rdbuf(); // 返回指针
         m_str = ss.str();
+        //ofstream f("./out.json");
+       // f<<ss.str();
+
     }
 
     void parse::load(const char *filename)
@@ -24,11 +39,14 @@ namespace Yu::json
         ss << fin.rdbuf();
         m_str = ss.str();
         m_idx = 0;
+        // ofstream f("./out.json");
+       // f<<ss.str();
     }
     json parse::parsefile()
     {
         if (m_str.size() <= m_idx)
             throw logic_error("parse file legth wrong");
+        skipwhite();
         switch (m_str[m_idx])
         {
         case '"':
@@ -54,11 +72,8 @@ namespace Yu::json
                 return parsenumber();
             else
             {
-             
-                cout<<endl;
                 throw logic_error("no match");
-            }
-                
+            }      
         }
     }
 
@@ -73,12 +88,14 @@ namespace Yu::json
         if (m_str.compare(m_idx, 4, "true") == 0)
         {
             m_idx += 4;
+         
             return json(true);
         }
 
         else if (m_str.compare(m_idx, 5, "false") == 0)
         {
             m_idx += 5;
+         
             return json(false);
         }
 
@@ -105,12 +122,12 @@ namespace Yu::json
             return json("");
         string temp =m_str.substr(m_idx, pos-m_idx);
         m_idx = pos + 1;
+  
         return json(temp);
     }
 
     json parse::parsenumber()
     {
-
         size_t pos = m_idx; // 判断是不是0
         while (inrange(m_str[m_idx]))
             m_idx++;
@@ -125,6 +142,7 @@ namespace Yu::json
                 while (m_str[m_idx] != 0 && !iswhite())
                     m_idx++;
                 skipwhite();
+               
                 return json(atof(a.c_str()));
             }
             throw logic_error("no a float");
@@ -133,9 +151,9 @@ namespace Yu::json
         while (m_str[m_idx] != 0 && !iswhite())
             m_idx++;
         skipwhite();
+   
         return json(atoi(a.c_str()));
     }
-
     json parse::parsearray()
     {
         skipwhite();
@@ -145,21 +163,15 @@ namespace Yu::json
         temp.push_back(parsefile());
         skipwhite();
         if(m_str[m_idx]==',')
-            m_idx++;
+            ++m_idx;
         else if(m_str[m_idx]!=']'){
-           
-               for(int i=100;i>=0;--i)
-                    cout<<m_str[m_idx-i];
-                    cout<<m_idx<<endl;
             throw logic_error("array format wrong");
         }
-            
-        else
-            break;
         skipwhite();
     }
     if(m_str[m_idx]!=']')
         throw logic_error("array format wron");
+    ++m_idx;
     return json(temp);
     }
 
@@ -167,6 +179,9 @@ namespace Yu::json
 
     json parse::parseobj()
     {
+       
+        ++a;
+       
         skipwhite();
         unordered_map<string,json>temp;
         while(m_idx<m_str.size()&&m_str[m_idx]!='}'){
@@ -179,19 +194,34 @@ namespace Yu::json
                 break;
             }
             else{
-                string name=m_str.substr(m_idx, pos-m_idx);
-                size_t namepos=name.find_last_not_of(" \r\n\t");
+                skipwhite();
+                if(m_str[m_idx]!='\"')
+                {
+                    for(int i=0;i<30;++i)
+                        cout<<m_str[m_idx-i];
+                    throw std::logic_error("obj name wrong");
+                }
+                    
+                ++m_idx;
+                string name=m_str.substr(m_idx, pos-m_idx-1);
                 
-                if(namepos!=string::npos)
-                    name=name.substr(0,namepos+1);
                 m_idx=pos+1;
                 skipwhite();
                 temp[name]=parsefile();
-            }
-            
+                // cout<<name<<": "<<temp[name]<<endl;
+                
+                skipwhite();
+                if(m_str[m_idx]!=','&&m_str[m_idx]!='}')
+                    throw std::logic_error("obj , wrong");
+                if(m_str[m_idx]==',')
+                    ++m_idx;
+                } 
         }
+
+        if(m_idx>m_str.size())
+            throw std::logic_error("onj {} wrong");
+        ++m_idx;
         return json(temp);
-    
     }
 
     bool parse::iswhite()

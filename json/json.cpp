@@ -177,30 +177,43 @@ namespace Yu::json
             return ss.str();
             break;
         case json_string:
-           cout<<*m_string<<endl;
             ss << "\"" << *m_string << "\"";
             return ss.str();
             break;
         case json_array:
-            ss << '[';
+            if (m_array->size() == 0)
+            {
+                ss << "[]";
+                return ss.str();
+            }
+            ss << '[' << endl;
             for (auto i = m_array->begin(); i != m_array->end(); ++i)
             {
-                if (i != m_array->begin())
-                    ss << ",";
                 ss << i->str();
+                if (i + 1 != m_array->end())
+                    ss << ",";
+                cout << i->str();
             }
-            ss << ']';
+            ss << ']' << endl;
             return ss.str();
             break;
 
         case json_obj:
-            ss << '{' << endl;
-            for (auto i = m_obj->begin(); i != m_obj->end(); ++i)
+            if (m_obj->size() == 0)
             {
-                cout<<i->first<<endl;
-                ss << i->first << ": " << i->second.str() <<","<< endl;
+                ss << "{}";
+                return ss.str();
             }
-                
+            ss << '{' << endl;
+            for (auto i = m_obj->begin(); i != m_obj->end();)
+            {
+                cout << i->first << endl;
+                ss << "\"" << i->first << "\""
+                   << ": " << i->second.str();
+                if (++i != m_obj->end())
+                    ss << ",\n";
+            }
+
             ss << '}';
             return ss.str();
             break;
