@@ -1,0 +1,24 @@
+{
+"configurations": [
+{
+"MIMode": "gdb",
+"externalConsole": false,
+"environment": [],
+"miDebuggerPath": "F:\\mingw64\\bin\\gdb.exe",
+"cwd": "${fileDirname}",
+"setupCommands": [
+{
+"text": "-enable-pretty-printing",
+"ignoreFailures": true,
+"description": "为 gdb 启用整齐打印"},{
+"ignoreFailures": true,
+"description": "将反汇编风格设置为 Intel",
+"text": "-gdb-set disassembly-flavor intel"}]
+,
+"type": "cppdbg",
+"name": 39,
+"request": "launch",
+"program": "${workspaceFolder}/a.exe",
+"stopAtEntry": false,
+"args": []}]
+}

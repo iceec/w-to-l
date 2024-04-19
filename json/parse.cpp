@@ -122,7 +122,6 @@ namespace Yu::json
             return json("");
         string temp =m_str.substr(m_idx, pos-m_idx);
         m_idx = pos + 1;
-  
         return json(temp);
     }
 
@@ -148,10 +147,9 @@ namespace Yu::json
             throw logic_error("no a float");
         }
         string a = m_str.substr(pos, m_idx-pos);
-        while (m_str[m_idx] != 0 && !iswhite())
-            m_idx++;
+        // while (m_str[m_idx] != 0 && !iswhite())
+        //     m_idx++;
         skipwhite();
-   
         return json(atoi(a.c_str()));
     }
     json parse::parsearray()
@@ -172,16 +170,13 @@ namespace Yu::json
     if(m_str[m_idx]!=']')
         throw logic_error("array format wron");
     ++m_idx;
-    return json(temp);
+    return json(std::move(temp));
     }
 
   
 
     json parse::parseobj()
     {
-       
-        ++a;
-       
         skipwhite();
         unordered_map<string,json>temp;
         while(m_idx<m_str.size()&&m_str[m_idx]!='}'){
@@ -221,7 +216,7 @@ namespace Yu::json
         if(m_idx>m_str.size())
             throw std::logic_error("onj {} wrong");
         ++m_idx;
-        return json(temp);
+        return json(std::move(temp));
     }
 
     bool parse::iswhite()

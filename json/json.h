@@ -2,12 +2,14 @@
 #include <unordered_map>
 #include <string>
 #include <vector>
+#include<memory>
 #include <sstream>
 using namespace std;
 
 
 //优化 赋值啥的 
 //测试数字是否成功
+//union  因为空间的重合 所以不能轻易的清零
 namespace Yu
 {
     namespace json
@@ -39,7 +41,9 @@ namespace Yu
             json(json &&p); // 把之前指针变成0即可
             json(const vector<json> &p);
             json(const unordered_map<string, json> &p);
-            json(Type type);
+            json(string &&p);
+            json(vector<json> &&p);
+            json(unordered_map<string, json> &&p);
             ~json();
 
             string str() const;
@@ -83,10 +87,10 @@ namespace Yu
             {
                 int m_int;
                 double m_double;
-                string *m_string;
+                std::unique_ptr<string> m_string{nullptr};
                 bool m_bool;
-                vector<json> *m_array;
-                unordered_map<string, json> *m_obj;
+                std::unique_ptr<vector<json>> m_array;
+                std::unique_ptr<unordered_map<string,json>> m_obj;
             };
             Type m_type;
         };

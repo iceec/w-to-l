@@ -11,6 +11,22 @@ namespace Yu::json
         m_type = json_int;
     }
 
+    json::json(vector<json> &&p)
+    {   m_array=nullptr;
+        m_array=std::make_unique<vector<json>>(std::move(p));
+        m_type=json_array;
+    }
+
+    json::json(unordered_map<string, json> &&p)
+    {   m_obj=nullptr;
+        std::cout<<"in it"<<endl;
+        m_obj=std::make_unique<unordered_map<string,json>>(std::move(p));
+        m_type=json_obj;
+    }
+
+
+
+
     json::json(const double &p)
     {
         clear();
@@ -28,16 +44,51 @@ namespace Yu::json
     {
         clear();
         m_type = json_string;
-        m_string = new string(p);
+        m_string = std::make_unique<string>(p);
     }
-
     json::json(const string &p)
     {
-        clear();
+        
 
         m_type = json_string;
+        m_string=nullptr;
+        m_string = std::make_unique<string>(p);   
+    }
+    json::json(string &&p)
+    {
 
-        m_string = new string(p);
+        m_type=json_string;
+         clear();
+        m_string = std::make_unique<string>(std::move(p));
+    }
+    json::json(json &&p)
+    {
+        clear();
+        m_type = p.m_type;
+        switch (m_type)
+        {
+        case json_int:
+            m_int = p.m_int;
+            break;
+        case json_bool:
+            m_bool = p.m_bool;
+            break;
+        case json_double:
+            m_double = p.m_double;
+            break;
+        case json_string:
+            m_string = std::move(p.m_string);
+            break;
+        case json_array:
+            m_array = std::move(p.m_array);
+            break;
+        case json_obj:
+            m_obj = std::move(p.m_obj);
+            break;
+        default:
+            break;
+        }
+        p.clear();
     }
     json::json(const json &p)
     {
@@ -57,26 +108,28 @@ namespace Yu::json
             m_double = p.m_double;
             break;
         case json_string:
-            m_string = new string(*(p.m_string));
+            m_string = std::make_unique<string>(*(p.m_string));
             break;
         case json_array:
-            m_array = new vector<json>();
+            m_array = std::make_unique<vector<json>>();
             for (auto i = p.m_array->begin(); i != p.m_array->end(); ++i)
                 m_array->push_back(*i);
             break;
-
         case json_obj:
-            m_obj = new unordered_map<string, json>(*p.m_obj);
+            m_obj = std::make_unique<unordered_map<string, json>>();
+            for (auto i = p.m_obj->begin(); i != p.m_obj->end(); ++i)
+                (*m_obj)[i->first] = i->second;
             break;
         default:
             break;
         }
     }
+
     json::json(const vector<json> &p)
     {
         clear();
         m_type = json_array;
-        m_array = new vector<json>();
+        m_array = std::make_unique<vector<json>>();
         for (auto i = p.begin(); i != p.end(); ++i)
             m_array->push_back(*i);
     }
@@ -85,8 +138,7 @@ namespace Yu::json
         clear();
         m_type = json_obj;
 
-        m_obj = new unordered_map<string, json>();
-
+        m_obj = std::make_unique<unordered_map<string, json>>();
         for (auto i = p.begin(); i != p.end(); ++i)
         {
             (*m_obj)[i->first] = i->second;
@@ -103,22 +155,19 @@ namespace Yu::json
             {
                 for (auto i = m_array->begin(); i != m_array->end(); ++i)
                     i->clear();
-                delete m_array;
-                m_array = nullptr;
+                m_array.reset();
             }
             break;
         case json_string:
             if (m_string != nullptr)
-                delete m_string;
-            m_string = nullptr;
+                m_string.reset();
             break;
         case json_obj:
             if (m_obj != nullptr)
             {
                 for (auto i = m_obj->begin(); i != m_obj->end(); ++i)
                     i->second.clear();
-                delete m_obj;
-                m_obj = nullptr;
+                m_obj.reset();
             }
             break;
         default:
@@ -128,35 +177,6 @@ namespace Yu::json
     json::~json()
     {
         clear();
-    }
-    json::json(Type type)
-    {
-
-        m_type = type;
-
-        switch (m_type)
-        {
-        case json_int:
-            m_int = 0;
-            break;
-        case json_bool:
-            m_bool = 0;
-            break;
-        case json_double:
-            m_double = 0;
-            break;
-        case json_string:
-            m_string = new string("");
-            break;
-        case json_array:
-            m_array = new vector<json>();
-            break;
-        case json_obj:
-            m_obj = new unordered_map<string, json>();
-            break;
-        default:
-            break;
-        }
     }
 
     string json::str() const
@@ -250,16 +270,18 @@ namespace Yu::json
             m_double = p.m_double;
             break;
         case json_string:
-            m_string = new string(*(p.m_string));
+            m_string = std::make_unique<string>(*(p.m_string));
             break;
         case json_array:
-            m_array = new vector<json>();
+            m_array = std::make_unique<vector<json>>();
             for (auto i = p.m_array->begin(); i != p.m_array->end(); ++i)
                 m_array->push_back(*i);
             break;
 
         case json_obj:
-            m_obj = new unordered_map<string, json>(*p.m_obj);
+            m_obj = std::make_unique<unordered_map<string, json>>();
+            for (auto i = p.m_obj->begin(); i != p.m_obj->end(); ++i)
+                (*m_obj)[i->first] = i->second;
             break;
         default:
             break;
@@ -269,9 +291,8 @@ namespace Yu::json
 
     json &json::operator=(json &&p)
     {
-
+        clear();
         m_type = p.m_type;
-
         switch (m_type)
         {
         case json_int:
@@ -284,54 +305,19 @@ namespace Yu::json
             m_double = p.m_double;
             break;
         case json_string:
-            m_string = p.m_string;
-            p.m_string = nullptr;
+            m_string = std::move(p.m_string);
             break;
         case json_array:
-            m_array = p.m_array;
-            p.m_array = nullptr;
+            m_array = std::move(p.m_array);
             break;
         case json_obj:
-            m_obj = p.m_obj;
-            p.m_obj = nullptr;
+            m_obj = std::move(p.m_obj);
             break;
         default:
             break;
         }
-
+        p.clear();
         return *this;
-    }
-
-    json::json(json &&p)
-    {
-        m_type = p.m_type;
-
-        switch (m_type)
-        {
-        case json_int:
-            m_int = p.m_int;
-            break;
-        case json_bool:
-            m_bool = p.m_bool;
-            break;
-        case json_double:
-            m_double = p.m_double;
-            break;
-        case json_string:
-            m_string = p.m_string;
-            p.m_string = nullptr;
-            break;
-        case json_array:
-            m_array = p.m_array;
-            p.m_array = nullptr;
-            break;
-        case json_obj:
-            m_obj = p.m_obj;
-            p.m_obj = nullptr;
-            break;
-        default:
-            break;
-        }
     }
 
     bool json::has(int index) const
@@ -390,7 +376,7 @@ namespace Yu::json
     {
         if (m_type != json_array || m_array == nullptr)
             throw logic_error("should be array append");
-        m_array->push_back(forward<json>(p));
+        m_array->push_back(std::move(p));
     }
 
     void json::append(const json &p)
@@ -400,6 +386,7 @@ namespace Yu::json
         m_array->push_back(p);
     }
 
+    // probelm in next  two
     json &json::operator[](int index)
     {
         return const_cast<json &>(*this).get(index);
